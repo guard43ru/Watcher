@@ -1,4 +1,4 @@
-Name: 		watcher
+Name: 		Watcher
 Version: 	0.3
 Release:        1%{?dist}
 Summary: 	Inotify watcher
@@ -6,8 +6,7 @@ Summary: 	Inotify watcher
 License: 	MIT
 Group:		System Environment/Base
 URL:	 	https://github.com/guard43ru/Watcher
-# TODO add release URL
-Source0: 	watcher-0.3.tar.gz
+Source0: 	%{url}/archive/%{version}.tar.gz
 
 Requires:	python-inotify
 Requires:	python-daemon
