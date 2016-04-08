@@ -1,10 +1,10 @@
 [Unit]
 Description=inotify watcher
-After=network.target
+After=basic.target
 
 [Service]
-ExecStart=/usr/local/bin/watcher.py -c /etc/watcher.ini start
-ExecStop=/usr/local/bin/watcher.py -c /etc/watcher.ini stop
+ExecStart=/usr/bin/watcher -c /etc/watcher.conf start
+ExecStop=/usr/bin/watcher -c /etc/watcher.conf stop
 PIDFile=/run/watcher.pid
 Type=simple
 Restart=always

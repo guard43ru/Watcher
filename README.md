@@ -41,8 +41,8 @@ For Python 3, install [python-daemon-3K](https://github.com/jbvsmo/python-daemon
 
 ## Configuration
 
-See the provided `watcher.ini` file for an example job configuration. The
-config file should reside in `/etc/watcher.ini` or `~/.watcher.ini`. You
+See the provided `watcher.conf` file for an example job configuration. The
+config file should reside in `/etc/watcher.conf` or `~/.watcher.conf`. You
 can also specify the path to the config file as a command line parameter
 using the `--config` option.
 
@@ -54,7 +54,6 @@ configuration.
 Make sure watcher.py is marked as executable:
 
     chmod +x watcher.py
-
 
 Start the daemon with:
 
