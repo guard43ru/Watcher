@@ -2,17 +2,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-##/usr/bin/env python
+# /usr/bin/env python
 ##
-##  Author: Bertrand Lacoste
-##  Modified from daemon.runner and from watcher (https://github.com/splitbrain/Watcher, original work https://github.com/gregghz/Watcher)
+#   Author: Bertrand Lacoste
+#   Modified from daemon.runner and from watcher (https://github.com/splitbrain/Watcher, original work https://github.com/gregghz/Watcher)
 ##
 
-import sys, os
-import signal, errno
+import sys
+import os
+import signal
+import errno
 import pyinotify
-import argparse, string
-import logging, time
+import argparse
+import string
+import logging
+import time
 import daemon
 try:
     from daemon.pidlockfile import PIDLockFile
@@ -38,7 +42,7 @@ except NameError:  # python 3 compatibility
 
 logger = logging.getLogger("daemonlog")
 logger.setLevel(logging.INFO)
-logformatter       = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logformatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logformatter_debug = logging.Formatter("%(asctime)s - %(levelname)s - %(threadName)s - %(funcName)s:%(lineno)d - %(message)s")
 
 # Video extensions
@@ -50,14 +54,18 @@ VIDEO_EXTENSIONS = ('.3g2', '.3gp', '.3gp2', '.3gpp', '.60d', '.ajp', '.asf', '.
                     '.qt', '.ram', '.rm', '.rmvb', '.swf', '.ts', '.vfw', '.vid', '.video', '.viv', '.vivo', '.vob',
                     '.vro', '.wm', '.wmv', '.wmx', '.wrap', '.wvx', '.wx', '.x264', '.xvid')
 
+
 class DaemonRunnerError(Exception):
     """ Abstract base class for errors from DaemonRunner. """
+
 
 class DaemonRunnerInvalidActionError(ValueError, DaemonRunnerError):
     """ Raised when specified action for DaemonRunner is invalid. """
 
+
 class DaemonRunnerStartFailureError(RuntimeError, DaemonRunnerError):
     """ Raised when failure starting DaemonRunner. """
+
 
 class DaemonRunnerStopFailureError(RuntimeError, DaemonRunnerError):
     """ Raised when failure stopping DaemonRunner. """
@@ -85,7 +93,7 @@ class DaemonRunner(object):
         # python-daemon>=2.1 has initgroups=True by default but it requires root privs;
         # older versions don't support initgroups as constructor parameter so we set it manually instead:
         self.daemon_context.initgroups = False
-        self.daemon_context.stdin  = open(stdin or '/dev/null', 'rb')
+        self.daemon_context.stdin = open(stdin or '/dev/null', 'rb')
         self.daemon_context.stdout = open(stdout or '/dev/null', 'w+b')
         self.daemon_context.stderr = open(stderr or '/dev/null', 'w+b', buffering=0)
 
@@ -93,7 +101,7 @@ class DaemonRunner(object):
         if pidfile is not None:
             self.pidfile = make_pidlockfile(pidfile)
         self.daemon_context.pidfile = self.pidfile
-        ## TO BE IMPLEMENTED
+        # TO BE IMPLEMENTED
         if signal_map is not None:
             self.daemon_context.signal_map = signal_map
         self.daemon_context.files_preserve = files_preserve
@@ -113,10 +121,10 @@ class DaemonRunner(object):
         """ Open the daemon context and run the application.
             """
         status = is_pidfile_stale(self.pidfile)
-        if status == True:
+        if status is True:
             self.pidfile.break_lock()
-        elif status == False:
-            ## Allow only one instance of the daemon
+        elif status is False:
+            #  Allow only one instance of the daemon
             pid = self.pidfile.read_pid()
             logger.info("Daemon already running with PID %(pid)r", vars())
             return
@@ -169,6 +177,7 @@ class DaemonRunner(object):
         raise DaemonRunnerStopFailureError(
             "Failed to terminate %(pid)d" % vars())
 
+
 def make_pidlockfile(path):
     """ Make a LockFile instance with the given filesystem path. """
     if not isinstance(path, basestring):
@@ -176,6 +185,7 @@ def make_pidlockfile(path):
     if not os.path.isabs(path):
         raise ValueError("Not an absolute path: %(path)r" % vars())
     return PIDLockFile(path)
+
 
 def is_pidfile_stale(pidfile):
     """ Determine whether a PID file is stale.
@@ -199,6 +209,7 @@ def is_pidfile_stale(pidfile):
 
     return result
 
+
 # from http://stackoverflow.com/questions/35817/how-to-escape-os-system-calls-in-python
 def shellquote(s):
     # prevent converting unicode to str on python2 (causes UnicodeEncodeError)
@@ -206,9 +217,10 @@ def shellquote(s):
         s = str(s)
     return "'" + s.replace("'", "'\\''") + "'"
 
-def post_action(cmd, job, output):
-    if not cmd: return
 
+def post_action(cmd, job, output):
+    if not cmd:
+        return
     try:
         # convert output to unicode
         enc = chardet.detect(output)['encoding']
@@ -222,10 +234,11 @@ def post_action(cmd, job, output):
                            host=shellquote(socket.gethostname()),
                            output=shellquote(output))
     try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell = True)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
         logger.debug("post action succeed: '%s'", output)
     except subprocess.CalledProcessError as err:
         logger.error("post action failed, return code was %s: '%s'", err.returncode, err.output)
+
 
 def process_report(process, opts, stdoutdata):
     prefix = "Child {0}".format(process.pid) if opts['background'] else "Command"
@@ -243,6 +256,7 @@ def process_report(process, opts, stdoutdata):
                 fh.write(stdoutdata)
         else:
             logger.info("Output was: '%s'", stdoutdata)
+
 
 class EventHandler(pyinotify.ProcessEvent):
     def __init__(self, **opts):
@@ -286,74 +300,75 @@ class EventHandler(pyinotify.ProcessEvent):
             logger.exception("Failed to run command '%s':", command)
 
     def process_IN_ACCESS(self, event):
-        #print "Access: %s"%(event.pathname)
+        # print "Access: %s"%(event.pathname)
         logger.info("Access: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_ATTRIB(self, event):
-        #print "Attrib: %s"%(event.pathname)
+        # print "Attrib: %s"%(event.pathname)
         logger.info("Attrib: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_CLOSE_WRITE(self, event):
-        #print "Close write: %s"%(event.pathname)
+        # print "Close write: %s"%(event.pathname)
         logger.info("Close write: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_CLOSE_NOWRITE(self, event):
-        #print "Close nowrite: %s"%(event.pathname)
+        # print "Close nowrite: %s"%(event.pathname)
         logger.info("Close nowrite: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_CREATE(self, event):
-        #print "Creating: %s"%(event.pathname)
+        # print "Creating: %s"%(event.pathname)
         logger.info("Creating: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_DELETE(self, event):
-        #print "Deleting: %s"%(event.pathname)
+        # print "Deleting: %s"%(event.pathname)
         logger.info("Deleting: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_MODIFY(self, event):
-        #print "Modify: %s"%(event.pathname)
+        # print "Modify: %s"%(event.pathname)
         logger.info("Modify: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_MOVE_SELF(self, event):
-        #print "Move self: %s"%(event.pathname)
+        # print "Move self: %s"%(event.pathname)
         logger.info("Move self: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_MOVED_FROM(self, event):
-        #print "Moved from: %s"%(event.pathname)
+        # print "Moved from: %s"%(event.pathname)
         logger.info("Moved from: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_MOVED_TO(self, event):
-        #print "Moved to: %s"%(event.pathname)
+        # print "Moved to: %s"%(event.pathname)
         logger.info("Moved to: %s", event.pathname)
         self.runCommand(event)
 
     def process_IN_OPEN(self, event):
-        #print "Opened: %s"%(event.pathname)
+        # print "Opened: %s"%(event.pathname)
         logger.info("Opened: %s", event.pathname)
         self.runCommand(event)
 
+
 def watcher(config):
-    wdds      = dict()
+    wdds = dict()
     notifiers = dict()
 
     # read jobs from config file
     for section in config.sections():
         # mandatory opts
-        mask      = parseMask(config.get(section, 'events').split(','))
-        folder    = config.get(section, 'watch')
-        command   = config.get(section, 'command')
+        mask = parseMask(config.get(section, 'events').split(','))
+        folder = config.get(section, 'watch')
+        command = config.get(section, 'command')
         # optional opts (i.e. with default values)
         recursive = config.getboolean(section, 'recursive')
-        autoadd   = config.getboolean(section, 'autoadd')
-        excluded  = None if not config.get(section, 'excluded') else set(config.get(section, 'excluded').split(','))
+        autoadd = config.getboolean(section, 'autoadd')
+        excluded = None if not config.get(section, 'excluded') else set(config.get(section, 'excluded').split(','))
         include_extensions = None if not config.get(section, 'include_extensions') else set(config.get(section, 'include_extensions').split(','))
         exclude_extensions = None if not config.get(section, 'exclude_extensions') else set(config.get(section, 'exclude_extensions').split(','))
         exclude_re = None if not config.get(section, 'exclude_re') else re.compile(config.get(section, 'exclude_re'))
@@ -365,7 +380,7 @@ def watcher(config):
             t = string.Template(outfile)
             outfile = t.substitute(job=section)
             if log_output:
-               logger.debug("logging '%s' output to '%s'", section, outfile)
+                logger.debug("logging '%s' output to '%s'", section, outfile)
         elif log_output:
             logger.debug("logging '%s' output to daemon log", section)
 
@@ -380,18 +395,18 @@ def watcher(config):
             include_extensions |= set(VIDEO_EXTENSIONS)
 
         wm = pyinotify.WatchManager()
-        handler = EventHandler(job = section,
-                               folder = folder,
-                               command = command,
-                               log_output = log_output,
-                               include_extensions = include_extensions,
-                               exclude_extensions = exclude_extensions,
-                               exclude_re = exclude_re,
-                               background = background,
-                               action_on_success = action_on_success,
-                               action_on_failure = action_on_failure,
-                               outfile = outfile
-                              )
+        handler = EventHandler(job=section,
+                               folder=folder,
+                               command=command,
+                               log_output=log_output,
+                               include_extensions=include_extensions,
+                               exclude_extensions=exclude_extensions,
+                               exclude_re=exclude_re,
+                               background=background,
+                               action_on_success=action_on_success,
+                               action_on_failure=action_on_failure,
+                               outfile=outfile
+                               )
 
         wdds[section] = wm.add_watch(folder, mask, rec=recursive, auto_add=autoadd)
         # Remove watch about excluded dir.
@@ -433,11 +448,13 @@ def watcher(config):
     except:
         cleanup_notifiers(notifiers)
 
+
 def cleanup_notifiers(notifiers):
     """Close notifiers instances when the process is killed
     """
     for notifier in notifiers.values():
         notifier.stop()
+
 
 def parseMask(masks):
     ret = False
@@ -481,16 +498,18 @@ def parseMask(masks):
             ret = addMask(pyinotify.IN_CLOSE_WRITE | pyinotify.IN_CLOSE_NOWRITE, ret)
     return ret
 
+
 def addMask(new_option, current_options):
     if not current_options:
         return new_option
     else:
         return current_options | new_option
 
+
 def init_daemon(cf):
     """Convert config.defaults() OrderedDict to a `dict` to use in daemon initialization
     """
-    #logfile = cf.get('logfile', '/tmp/watcher.log')
+    # logfile = cf.get('logfile', '/tmp/watcher.log')
     pidfile = cf.get('pidfile', '/tmp/watcher.pid')
     # uid
     uid = cf.get('uid', None)
@@ -554,7 +573,7 @@ if __name__ == "__main__":
                                         'action_on_success': None,
                                         'action_on_failure': None,
                                         'outfile': None
-                                       })
+                                        })
     if args.config:
         # load config file specified by commandline
         confok = config.read(args.config)
@@ -590,17 +609,17 @@ if __name__ == "__main__":
     # Execute the command
     if 'start' == args.command:
         daemon.start()
-        #logger.info('Daemon started')
+        # logger.info('Daemon started')
     elif 'stop' == args.command:
         daemon.stop()
-        #logger.info('Daemon stopped')
+        # logger.info('Daemon stopped')
     elif 'restart' == args.command:
         daemon.restart()
-        #logger.info('Daemon restarted')
+        # logger.info('Daemon restarted')
     elif 'debug' == args.command:
         logger.warning('Press Control+C to quit...')
         daemon.run()
-        #logger.info('Debug mode')
+        # logger.info('Debug mode')
     else:
         print("Unknown Command")
         sys.exit(2)
