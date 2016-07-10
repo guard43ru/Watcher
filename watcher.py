@@ -12,7 +12,7 @@ import sys, os
 import signal, errno
 import pyinotify
 import argparse, string
-import logging, time
+import logging, logging.handlers, time
 import daemon
 try:
     from daemon.pidlockfile import PIDLockFile
@@ -576,7 +576,7 @@ if __name__ == "__main__":
         loghandler = logging.StreamHandler()
         logger.setLevel(logging.DEBUG)
     else:
-        loghandler = logging.FileHandler(config.get('DEFAULT', 'logfile'))
+        loghandler = logging.handlers.RotatingFileHandler(config.get('DEFAULT', 'logfile'), maxBytes=8388608, backupCount=7)
     if args.verbose:
         logger.setLevel(logging.DEBUG)
     if logger.getEffectiveLevel() <= logging.DEBUG:
