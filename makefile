@@ -7,7 +7,7 @@ install:
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system/
 	mkdir -p $(DESTDIR)/var/lib/watcher
 	cp watcher.py $(DESTDIR)/usr/bin/watcher
-	cp watcher.conf $(DESTDIR)/etc/
+	test -s $(DESTDIR)/etc/watcher.conf || { cp watcher.conf $(DESTDIR)/etc/; }
 	cp ./package/init/watcher.systemd $(DESTDIR)/usr/lib/systemd/system/watcher.service
 
 uninstall:
