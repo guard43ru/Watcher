@@ -566,7 +566,7 @@ if __name__ == "__main__":
         confok = config.read(args.config)
     else:
         # load config file from default locations
-        confok = config.read(['/etc/watcher.ini', os.path.expanduser('~/.watcher.ini')])
+        confok = config.read(['/etc/watcher.conf', os.path.expanduser('~/.watcher.conf')])
     if not confok:
         sys.stderr.write("Failed to read config file. Try -c parameter\n")
         sys.exit(4)
