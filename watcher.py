@@ -12,7 +12,7 @@ import sys, os
 import signal, errno
 import pyinotify
 import argparse, string
-import logging, time
+import logging, logging.handlers, time
 import daemon
 try:
     from daemon.pidlockfile import PIDLockFile
@@ -260,6 +260,9 @@ class EventHandler(pyinotify.ProcessEvent):
         if self.opts['exclude_re'] and self.opts['exclude_re'].search(os.path.basename(event.pathname)):
             logger.debug("File '%s' excluded because its name matched exclude regexp '%s'", event.pathname, self.opts['exclude_re'].pattern)
             return
+        if self.opts['exclude_re_dir'] and self.opts['exclude_re_dir'].search(os.path.dirname(event.pathname)):
+            logger.debug("File '%s' excluded because its name matched exclude regexp directory '%s'", event.pathname, self.opts['exclude_re_dir'].pattern)
+            return
 
         t = string.Template(self.opts['command'])
         command = t.substitute(job=shellquote(self.opts['job']),
@@ -357,6 +360,7 @@ def watcher(config):
         include_extensions = None if not config.get(section, 'include_extensions') else set(config.get(section, 'include_extensions').split(','))
         exclude_extensions = None if not config.get(section, 'exclude_extensions') else set(config.get(section, 'exclude_extensions').split(','))
         exclude_re = None if not config.get(section, 'exclude_re') else re.compile(config.get(section, 'exclude_re'))
+        exclude_re_dir = None if not config.get(section, 'exclude_re_dir') else re.compile(config.get(section, 'exclude_re_dir'))
         background = config.getboolean(section, 'background')
         log_output = config.getboolean(section, 'log_output')
 
@@ -387,6 +391,7 @@ def watcher(config):
                                include_extensions = include_extensions,
                                exclude_extensions = exclude_extensions,
                                exclude_re = exclude_re,
+                               exclude_re_dir = exclude_re_dir,
                                background = background,
                                action_on_success = action_on_success,
                                action_on_failure = action_on_failure,
@@ -549,6 +554,7 @@ if __name__ == "__main__":
                                         'include_extensions': None,
                                         'exclude_extensions': None,
                                         'exclude_re': None,
+                                        'exclude_re_dir': None,
                                         'background': "false",
                                         'log_output': "true",
                                         'action_on_success': None,
@@ -560,7 +566,7 @@ if __name__ == "__main__":
         confok = config.read(args.config)
     else:
         # load config file from default locations
-        confok = config.read(['/etc/watcher.ini', os.path.expanduser('~/.watcher.ini')])
+        confok = config.read(['/etc/watcher.conf', os.path.expanduser('~/.watcher.conf')])
     if not confok:
         sys.stderr.write("Failed to read config file. Try -c parameter\n")
         sys.exit(4)
@@ -570,7 +576,7 @@ if __name__ == "__main__":
         loghandler = logging.StreamHandler()
         logger.setLevel(logging.DEBUG)
     else:
-        loghandler = logging.FileHandler(config.get('DEFAULT', 'logfile'))
+        loghandler = logging.handlers.RotatingFileHandler(config.get('DEFAULT', 'logfile'), maxBytes=8388608, backupCount=7)
     if args.verbose:
         logger.setLevel(logging.DEBUG)
     if logger.getEffectiveLevel() <= logging.DEBUG:
